@@ -1,0 +1,3 @@
+#!/bin/zsh
+
+clang -lstdc++ -lncurses -lform main.cpp -o bin/run
