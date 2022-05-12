@@ -31,15 +31,17 @@ static char* trim_whitespaces(char *str, int maxlen)
 }
 
 #include "building.h"
+#include "person.h"
 
 void load_or_init_db_files() {
   building_load_or_init();
+  person_load_or_init();
 }
 
 void set_main_screen() {
   erase();
   slk_set(1, "Дом", 0);
-  slk_set(2, "", 0);
+  slk_set(2, "Лицо", 0);
   slk_set(3, "", 0);
   slk_refresh();
 }
@@ -66,6 +68,12 @@ int main() {
         buildingController();
         set_main_screen();
         break;
+
+      case KEY_F(2):
+        personController();
+        set_main_screen();
+        break;
+
       defaut:
         break;
     }

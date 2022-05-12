@@ -24,7 +24,7 @@ struct Focus {
   Building *building;
 };
 
-int Page;
+int buildingPage;
 
 void building_load_or_init() {
   FILE *f = fopen("building.dat", "rb+");
@@ -54,9 +54,9 @@ BuildingResult* building_select() {
   FILE *f = fopen("building.dat", "rb+");
   fread(&result->count, sizeof(int), 1, f);
 
-  long select_offset = (Page - 1) * BUILDING_SIZE * 10 + BUILDING_OFFSET;
-  result->limit = (Page * 10 > result->count) ?
-    result->count - (Page - 1) * 10 :
+  long select_offset = (buildingPage - 1) * BUILDING_SIZE * 10 + BUILDING_OFFSET;
+  result->limit = (buildingPage * 10 > result->count) ?
+    result->count - (buildingPage - 1) * 10 :
     10;
 
   if (result->count > 0) {
@@ -101,6 +101,7 @@ void building_add_record(FIELD* fields[]) {
   last_id++;
   fwrite(&last_id, 1, sizeof(int), f);
   fclose(f);
+  free(house);
 }
 
 void building_update_record(Building* building, FIELD* fields[]) {
@@ -345,7 +346,7 @@ void buildingController() {
   Focus *focus = new Focus;
   keypad(w, true);
 
-  Page = 1;
+  buildingPage = 1;
   BuildingResult *buildings;
   buildings = building_select();
   building_index_window(w, buildings, focus);
@@ -402,9 +403,9 @@ void buildingController() {
         break;
 
       case KEY_LEFT:
-        Page--;
-        if (Page < 1) {
-          Page = 1;
+        buildingPage--;
+        if (buildingPage < 1) {
+          buildingPage = 1;
         } else {
           free(buildings);
           buildings = building_select();
@@ -413,9 +414,9 @@ void buildingController() {
         break;
 
       case KEY_RIGHT:
-        Page++;
-        if (Page * 10 - buildings->count > 9) {
-          Page--;
+        buildingPage++;
+        if (buildingPage * 10 - buildings->count > 9) {
+          buildingPage--;
         } else {
           free(buildings);
           buildings = building_select();
