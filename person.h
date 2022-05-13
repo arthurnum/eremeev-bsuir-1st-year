@@ -41,7 +41,7 @@ void person_load_or_init() {
       fwrite(&last_id, sizeof(int), 1, f);
 
       char *pageMock = (char*)calloc(PERSON_SIZE, sizeof(char));
-      for(int i = 0; i < PAGE_SIZE; i++) {
+      for(int i = 0; i < PERSON_PAGE_SIZE; i++) {
         fwrite(pageMock, sizeof(char), PERSON_SIZE, f);
       }
     }

@@ -77,6 +77,58 @@ BuildingResult* building_select() {
   return result;
 }
 
+Building* building_find_by_id(int id) {
+  FILE *f = fopen("building.dat", "rb+");
+  int count;
+  fread(&count, sizeof(int), 1, f);
+
+  if (count < 1) { return NULL; }
+
+  bool searching = true;
+  int left = 1;
+  int right = count;
+  Building *result = new Building;
+  result->street = (char*)calloc(STREET_SIZE, sizeof(char));
+
+  while(searching) {
+    if (right - left < 4) {
+      for(int i = left; i <= right; i++) {
+        fseek(f, BUILDING_OFFSET + (i - 1) * BUILDING_SIZE, SEEK_SET);
+        fread(&result->id, sizeof(int), 1, f);
+        if (result->id == id) {
+          fread(&result->number, sizeof(int), 1, f);
+          fread(result->street, STREET_SIZE*sizeof(char), 1, f);
+          searching = false;
+          break;
+        }
+      }
+      if (searching) {
+        free(result);
+        result = NULL;
+        searching = false;
+      }
+    } else {
+      int t = (left + right) / 2;
+      fseek(f, BUILDING_OFFSET + (t - 1) * BUILDING_SIZE, SEEK_SET);
+      fread(&result->id, sizeof(int), 1, f);
+      if (result->id == id) {
+        fread(&result->number, sizeof(int), 1, f);
+        fread(result->street, STREET_SIZE*sizeof(char), 1, f);
+        searching = false;
+      } else {
+        if (result->id > id) {
+          right = t;
+        } else {
+          left = t;
+        }
+      }
+    }
+  }
+
+  fclose(f);
+  return result;
+}
+
 void building_add_record(FIELD* fields[]) {
   FILE *f = fopen("building.dat", "rb+");
 
