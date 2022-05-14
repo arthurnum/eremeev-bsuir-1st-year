@@ -33,11 +33,13 @@ static char* trim_whitespaces(char *str, int maxlen)
 #include "building.h"
 #include "person.h"
 #include "flat.h"
+#include "contract.h"
 
 void load_or_init_db_files() {
   building_load_or_init();
   person_load_or_init();
   flat_load_or_init();
+  contract_load_or_init();
 }
 
 void set_main_screen() {
@@ -45,6 +47,7 @@ void set_main_screen() {
   slk_set(1, "Дом", 0);
   slk_set(2, "Лицо", 0);
   slk_set(3, "Кварт", 0);
+  slk_set(4, "Догов", 0);
   slk_refresh();
 }
 
@@ -78,6 +81,11 @@ int main() {
 
       case KEY_F(3):
         flatController();
+        set_main_screen();
+        break;
+
+      case KEY_F(4):
+        contractController();
         set_main_screen();
         break;
 

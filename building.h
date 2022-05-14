@@ -390,6 +390,7 @@ void building_index_window(WINDOW *w, BuildingResult *buildings, Focus *focus) {
   slk_set(1, "Новый", 0);
   slk_set(2, "Измен", 0);
   slk_set(3, "Удал", 0);
+  slk_set(4, "", 0);
   slk_refresh();
 }
 

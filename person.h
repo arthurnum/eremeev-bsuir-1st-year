@@ -105,7 +105,91 @@ void person_index_window(WINDOW *w, PersonResult *persons, PersonFocus *focus) {
   slk_set(1, "Новый", 0);
   slk_set(2, "Измен", 0);
   slk_set(3, "Удал", 0);
+  slk_set(4, "", 0);
   slk_refresh();
+}
+
+Person* person_search_window() {
+  WINDOW *w = newwin(0, 0, 0, 0);
+  PersonFocus *focus = new PersonFocus;
+  keypad(w, true);
+
+  personPage = 1;
+  PersonResult *persons;
+  persons = person_select();
+  person_index_window(w, persons, focus);
+
+  Person *result = NULL;
+  bool exit = false;
+  int ctrlInput;
+
+  do {
+    ctrlInput = wgetch(w);
+
+    switch(ctrlInput) {
+      case KEY_DOWN:
+        if (focus->enabled) {
+          mvwaddstr(w, 1 + focus->row * 2, 1, "  ");
+          focus->row++;
+          if (focus->row > focus->max) {
+            focus->row = 1;
+          }
+          focus->person = persons->rows[focus->row - 1];
+          mvwaddstr(w, 1 + focus->row * 2, 1, "->");
+        }
+        break;
+
+      case KEY_UP:
+        if (focus->enabled) {
+          mvwaddstr(w, 1 + focus->row * 2, 1, "  ");
+          focus->row--;
+          if (focus->row < 1) {
+            focus->row = focus->max;
+          }
+          focus->person = persons->rows[focus->row - 1];
+          mvwaddstr(w, 1 + focus->row * 2, 1, "->");
+        }
+        break;
+
+      case KEY_LEFT:
+        personPage--;
+        if (personPage < 1) {
+          personPage = 1;
+        } else {
+          free(persons);
+          persons = person_select();
+          person_index_window(w, persons, focus);
+        }
+        break;
+
+      case KEY_RIGHT:
+        personPage++;
+        if (personPage * 10 - persons->count > 9) {
+          personPage--;
+        } else {
+          free(persons);
+          persons = person_select();
+          person_index_window(w, persons, focus);
+        }
+        break;
+
+      case ESC_KEY:
+        exit = true;
+        break;
+
+      case KEY_ENTER:
+      case 10:
+        result = focus->person;
+        exit = true;
+        break;
+
+      defaut:
+        break;
+    }
+  } while(!exit);
+
+  delwin(w);
+  return result;
 }
 
 void person_add_record(FIELD* fields[]) {

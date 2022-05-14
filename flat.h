@@ -120,7 +120,91 @@ void flat_index_window(WINDOW *w, FlatResult *flats, FlatFocus *focus) {
   slk_set(1, "Новый", 0);
   slk_set(2, "Измен", 0);
   slk_set(3, "Удал", 0);
+  slk_set(4, "", 0);
   slk_refresh();
+}
+
+Flat* flat_search_window() {
+  WINDOW *w = newwin(0, 0, 0, 0);
+  FlatFocus *focus = new FlatFocus;
+  keypad(w, true);
+
+  flatPage = 1;
+  FlatResult *flats;
+  flats = flat_select();
+  flat_index_window(w, flats, focus);
+
+  Flat *result;
+  bool exit = false;
+  int ctrlInput;
+
+  do {
+    ctrlInput = wgetch(w);
+
+    switch(ctrlInput) {
+      case KEY_DOWN:
+        if (focus->enabled) {
+          mvwaddstr(w, 1 + focus->row * 2, 1, "  ");
+          focus->row++;
+          if (focus->row > focus->max) {
+            focus->row = 1;
+          }
+          focus->flat = flats->rows[focus->row - 1];
+          mvwaddstr(w, 1 + focus->row * 2, 1, "->");
+        }
+        break;
+
+      case KEY_UP:
+        if (focus->enabled) {
+          mvwaddstr(w, 1 + focus->row * 2, 1, "  ");
+          focus->row--;
+          if (focus->row < 1) {
+            focus->row = focus->max;
+          }
+          focus->flat = flats->rows[focus->row - 1];
+          mvwaddstr(w, 1 + focus->row * 2, 1, "->");
+        }
+        break;
+
+      case KEY_LEFT:
+        flatPage--;
+        if (flatPage < 1) {
+          flatPage = 1;
+        } else {
+          free(flats);
+          flats = flat_select();
+          flat_index_window(w, flats, focus);
+        }
+        break;
+
+      case KEY_RIGHT:
+        flatPage++;
+        if (flatPage * 10 - flats->count > 9) {
+          flatPage--;
+        } else {
+          free(flats);
+          flats = flat_select();
+          flat_index_window(w, flats, focus);
+        }
+        break;
+
+      case ESC_KEY:
+        exit = true;
+        break;
+
+      case KEY_ENTER:
+      case 10:
+        result = focus->flat;
+        exit = true;
+        break;
+
+      defaut:
+        break;
+    }
+  } while(!exit);
+
+  delwin(w);
+  return result;
 }
 
 void flat_add_record(FIELD* fields[]) {
