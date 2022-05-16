@@ -8,6 +8,7 @@ struct Contract {
   int flat_id;
   int person_id;
   long offset;
+  Flat *flat;
   Person *person;
 };
 
@@ -69,6 +70,8 @@ ContractResult* contract_select() {
       fread(&result->rows[i]->id, sizeof(int), 1, f);
       fread(&result->rows[i]->flat_id, sizeof(int), 1, f);
       fread(&result->rows[i]->person_id, sizeof(int), 1, f);
+      result->rows[i]->flat = flat_find_by_id(result->rows[i]->flat_id);
+      result->rows[i]->person = person_find_by_id(result->rows[i]->person_id);
     }
   }
 
@@ -78,12 +81,34 @@ ContractResult* contract_select() {
 
 void contract_index_window(WINDOW *w, ContractResult *contracts, ContractFocus *focus) {
   werase(w);
-  mvwaddstr(w, 1, 3, "#\tFoobar");
+  mvwaddstr(w, 1, 3, "#");
+  mvwaddstr(w, 1, 9, "Адрес");
+  mvwaddstr(w, 1, 37, "Лицо");
 
   for(int i = 0; i < contracts->limit; i++) {
     mvwprintw(w, 3 + i * 2, 3, "%d",
       contracts->rows[i]->id
     );
+
+    if (contracts->rows[i]->flat) {
+      char flat_str[8] = "";
+      sprintf(flat_str, "%d m2", contracts->rows[i]->flat->square);
+
+      char building_str[128] = "";
+      if (contracts->rows[i]->flat->building) {
+        sprintf(building_str, "%s %d", contracts->rows[i]->flat->building->street,
+          contracts->rows[i]->flat->building->number);
+      } else {
+        sprintf(building_str, "N/A");
+      }
+      mvwprintw(w, 3 + i * 2, 9, "%s | %s", building_str, flat_str);
+    }
+
+    if (contracts->rows[i]->person) {
+      mvwprintw(w, 3 + i * 2, 37, "%s %s",
+        contracts->rows[i]->person->surname,
+        contracts->rows[i]->person->name);
+    }
   }
 
   if (contracts->count > 0) {
@@ -108,8 +133,6 @@ void contract_index_window(WINDOW *w, ContractResult *contracts, ContractFocus *
 }
 
 void contract_add_record(FIELD* fields[]) {
-  return;
-
   FILE *f = fopen("contract.dat", "rb+");
 
   int count = 0;
@@ -117,27 +140,23 @@ void contract_add_record(FIELD* fields[]) {
 
   int last_id = 0;
   fread(&last_id, sizeof(int), 1, f);
-  //
-  // Flat *flat = new Flat;
-  // flat->id = last_id + 1;
-  // flat->building_id = atoi(field_buffer(fields[0], 0));
-  // flat->floor = atoi(field_buffer(fields[1], 0));
-  // flat->rooms = atoi(field_buffer(fields[2], 0));
-  // flat->square = atoi(field_buffer(fields[3], 0));
-  //
-  // fseek(f, FLAT_OFFSET + FLAT_SIZE * count, SEEK_SET);
-  // fwrite(&flat->id, 1, sizeof(int), f);
-  // fwrite(&flat->building_id, 1, sizeof(int), f);
-  // fwrite(&flat->floor, 1, sizeof(int), f);
-  // fwrite(&flat->rooms, 1, sizeof(int), f);
-  // fwrite(&flat->square, 1, sizeof(int), f);
-  // fseek(f, 0, SEEK_SET);
-  // count++;
-  // fwrite(&count, 1, sizeof(int), f);
-  // last_id++;
-  // fwrite(&last_id, 1, sizeof(int), f);
-  // fclose(f);
-  // free(flat);
+
+  Contract *contract = new Contract;
+  contract->id = last_id + 1;
+  contract->flat_id = atoi(field_buffer(fields[0], 0));
+  contract->person_id = atoi(field_buffer(fields[1], 0));
+
+  fseek(f, CONTRACT_OFFSET + CONTRACT_SIZE * count, SEEK_SET);
+  fwrite(&contract->id, 1, sizeof(int), f);
+  fwrite(&contract->flat_id, 1, sizeof(int), f);
+  fwrite(&contract->person_id, 1, sizeof(int), f);
+  fseek(f, 0, SEEK_SET);
+  count++;
+  fwrite(&count, 1, sizeof(int), f);
+  last_id++;
+  fwrite(&last_id, 1, sizeof(int), f);
+  fclose(f);
+  free(contract);
 }
 
 void add_contract_window() {
@@ -193,17 +212,22 @@ void add_contract_window() {
             sprintf(buf, "%d", flat->id);
             set_field_buffer(fields[0], 0, buf);
             char flat_str[128] = "";
-            sprintf(flat_str, "%s %d, %d m2",
-              flat->building->street,
-              flat->building->number,
-              flat->square
-            );
+            if (flat->building) {
+              sprintf(flat_str, "%s %d | %d m2",
+                flat->building->street,
+                flat->building->number,
+                flat->square
+              );
+            } else {
+              sprintf(flat_str, "N/A | %d m2", flat->square);
+            }
             set_field_buffer(fields[2], 0, flat_str);
             free(flat);
           }
         }
         touchwin(w);
         break;
+
       case KEY_F(2):
         {
           Person *person = person_search_window();

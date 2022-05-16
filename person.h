@@ -79,6 +79,59 @@ PersonResult* person_select() {
   return result;
 }
 
+Person* person_find_by_id(int id) {
+  FILE *f = fopen("person.dat", "rb+");
+  int count;
+  fread(&count, sizeof(int), 1, f);
+
+  if (count < 1) { return NULL; }
+
+  bool searching = true;
+  int left = 1;
+  int right = count;
+  Person *result = new Person;
+  result->surname = (char*)calloc(SURNAME_SIZE, sizeof(char));
+  result->name = (char*)calloc(NAME_SIZE, sizeof(char));
+
+  while(searching) {
+    if (right - left < 4) {
+      for(int i = left; i <= right; i++) {
+        fseek(f, PERSON_OFFSET + (i - 1) * PERSON_SIZE, SEEK_SET);
+        fread(&result->id, sizeof(int), 1, f);
+        if (result->id == id) {
+          fread(result->surname, SURNAME_SIZE*sizeof(char), 1, f);
+          fread(result->name, NAME_SIZE*sizeof(char), 1, f);
+          searching = false;
+          break;
+        }
+      }
+      if (searching) {
+        free(result);
+        result = NULL;
+        searching = false;
+      }
+    } else {
+      int t = (left + right) / 2;
+      fseek(f, PERSON_OFFSET + (t - 1) * PERSON_SIZE, SEEK_SET);
+      fread(&result->id, sizeof(int), 1, f);
+      if (result->id == id) {
+        fread(result->surname, SURNAME_SIZE*sizeof(char), 1, f);
+        fread(result->name, NAME_SIZE*sizeof(char), 1, f);
+        searching = false;
+      } else {
+        if (result->id > id) {
+          right = t;
+        } else {
+          left = t;
+        }
+      }
+    }
+  }
+
+  fclose(f);
+  return result;
+}
+
 void person_index_window(WINDOW *w, PersonResult *persons, PersonFocus *focus) {
   werase(w);
   mvwaddstr(w, 1, 3, "#\tИмя");

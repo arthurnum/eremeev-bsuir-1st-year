@@ -81,6 +81,63 @@ FlatResult* flat_select() {
   return result;
 }
 
+Flat* flat_find_by_id(int id) {
+  FILE *f = fopen("flat.dat", "rb+");
+  int count;
+  fread(&count, sizeof(int), 1, f);
+
+  if (count < 1) { return NULL; }
+
+  bool searching = true;
+  int left = 1;
+  int right = count;
+  Flat *result = new Flat;
+
+  while(searching) {
+    if (right - left < 4) {
+      for(int i = left; i <= right; i++) {
+        fseek(f, FLAT_OFFSET + (i - 1) * FLAT_SIZE, SEEK_SET);
+        fread(&result->id, sizeof(int), 1, f);
+        if (result->id == id) {
+          fread(&result->building_id, sizeof(int), 1, f);
+          fread(&result->floor, sizeof(int), 1, f);
+          fread(&result->rooms, sizeof(int), 1, f);
+          fread(&result->square, sizeof(int), 1, f);
+          result->building = building_find_by_id(result->building_id);
+          searching = false;
+          break;
+        }
+      }
+      if (searching) {
+        free(result);
+        result = NULL;
+        searching = false;
+      }
+    } else {
+      int t = (left + right) / 2;
+      fseek(f, FLAT_OFFSET + (t - 1) * FLAT_SIZE, SEEK_SET);
+      fread(&result->id, sizeof(int), 1, f);
+      if (result->id == id) {
+        fread(&result->building_id, sizeof(int), 1, f);
+        fread(&result->floor, sizeof(int), 1, f);
+        fread(&result->rooms, sizeof(int), 1, f);
+        fread(&result->square, sizeof(int), 1, f);
+        result->building = building_find_by_id(result->building_id);
+        searching = false;
+      } else {
+        if (result->id > id) {
+          right = t;
+        } else {
+          left = t;
+        }
+      }
+    }
+  }
+
+  fclose(f);
+  return result;
+}
+
 void flat_index_window(WINDOW *w, FlatResult *flats, FlatFocus *focus) {
   werase(w);
   mvwaddstr(w, 1, 3, "#\tЭтаж\tКомнаты\tПлощадь\tДом");
