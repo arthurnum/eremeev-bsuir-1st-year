@@ -275,7 +275,7 @@ void flat_add_record(FIELD* fields[]) {
 
   Flat *flat = new Flat;
   flat->id = last_id + 1;
-  flat->building_id = atoi(field_buffer(fields[0], 0));
+  flat->building_id = atoi(field_buffer(fields[0], 1));
   flat->floor = atoi(field_buffer(fields[1], 0));
   flat->rooms = atoi(field_buffer(fields[2], 0));
   flat->square = atoi(field_buffer(fields[3], 0));
@@ -301,14 +301,13 @@ void add_flat_window() {
   FORM *form;
   FIELD *fields[5];
 
-  fields[0] = new_field(1, 4, 1, 10, 0, 0);
+  fields[0] = new_field(1, 48, 1, 10, 0, 1);
   fields[1] = new_field(1, 4, 3, 10, 0, 0);
   fields[2] = new_field(1, 4, 5, 10, 0, 0);
   fields[3] = new_field(1, 4, 7, 10, 0, 0);
   fields[4] = NULL;
 
-  set_field_back(fields[0], A_UNDERLINE);
-  field_opts_off(fields[0], O_AUTOSKIP);
+  field_opts_off(fields[0], O_AUTOSKIP | O_EDIT | O_ACTIVE);
   set_field_type(fields[0], TYPE_INTEGER, 0, 1, 999);
 
   set_field_back(fields[1], A_UNDERLINE);
@@ -347,6 +346,23 @@ void add_flat_window() {
     ch = wgetch(w);
 
     switch(ch) {
+      case KEY_F(1):
+        {
+          Building *building = building_search_window();
+          if (building) {
+              char buf[4] = "";
+              sprintf(buf, "%d", building->id);
+              set_field_buffer(fields[0], 1, buf);
+              char building_str[128] = "";
+              sprintf(building_str, "%s %d", building->street, building->number);
+              set_field_buffer(fields[0], 0, building_str);
+              free(building);
+          }
+        }
+        curs_set(1);
+        touchwin(w);
+        break;
+
       case KEY_DOWN:
         form_driver(form, REQ_NEXT_FIELD);
         form_driver(form, REQ_END_LINE);

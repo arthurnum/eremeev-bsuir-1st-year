@@ -394,6 +394,89 @@ void building_index_window(WINDOW *w, BuildingResult *buildings, Focus *focus) {
   slk_refresh();
 }
 
+Building* building_search_window() {
+  WINDOW *w = newwin(0, 0, 0, 0);
+  Focus *focus = new Focus;
+  keypad(w, true);
+
+  buildingPage = 1;
+  BuildingResult *buildings;
+  buildings = building_select();
+  building_index_window(w, buildings, focus);
+
+  Building *result;
+  bool exit = false;
+  int ctrlInput;
+
+  do {
+    ctrlInput = wgetch(w);
+
+    switch(ctrlInput) {
+      case KEY_DOWN:
+        if (focus->enabled) {
+          mvwaddstr(w, 1 + focus->row * 2, 1, "  ");
+          focus->row++;
+          if (focus->row > focus->max) {
+            focus->row = 1;
+          }
+          focus->building = buildings->rows[focus->row - 1];
+          mvwaddstr(w, 1 + focus->row * 2, 1, "->");
+        }
+        break;
+
+      case KEY_UP:
+        if (focus->enabled) {
+          mvwaddstr(w, 1 + focus->row * 2, 1, "  ");
+          focus->row--;
+          if (focus->row < 1) {
+            focus->row = focus->max;
+          }
+          focus->building = buildings->rows[focus->row - 1];
+          mvwaddstr(w, 1 + focus->row * 2, 1, "->");
+        }
+        break;
+
+      case KEY_LEFT:
+        buildingPage--;
+        if (buildingPage < 1) {
+          buildingPage = 1;
+        } else {
+          free(buildings);
+          buildings = building_select();
+          building_index_window(w, buildings, focus);
+        }
+        break;
+
+      case KEY_RIGHT:
+        buildingPage++;
+        if (buildingPage * 10 - buildings->count > 9) {
+          buildingPage--;
+        } else {
+          free(buildings);
+          buildings = building_select();
+          building_index_window(w, buildings, focus);
+        }
+        break;
+
+      case ESC_KEY:
+        exit = true;
+        break;
+
+      case KEY_ENTER:
+      case 10:
+        result = focus->building;
+        exit = true;
+        break;
+
+      defaut:
+        break;
+    }
+  } while(!exit);
+
+  delwin(w);
+  return result;
+}
+
 void buildingController() {
   WINDOW *w = newwin(0, 0, 0, 0);
   Focus *focus = new Focus;
