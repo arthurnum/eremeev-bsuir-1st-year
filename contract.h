@@ -167,8 +167,8 @@ void add_contract_window() {
 
   fields[0] = new_field(1, 4, 1, 11, 0, 0); //flat_id
   fields[1] = new_field(1, 4, 3, 11, 0, 0); //person_id
-  fields[2] = new_field(1, 128, 1, 20, 0, 0); //Flat
-  fields[3] = new_field(1, 128, 3, 20, 0, 0); //Person
+  fields[2] = new_field(1, 64, 1, 20, 0, 0); //Flat
+  fields[3] = new_field(1, 64, 3, 20, 0, 0); //Person
   fields[4] = NULL;
 
   set_field_back(fields[0], A_UNDERLINE);
