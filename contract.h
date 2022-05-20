@@ -368,7 +368,7 @@ void contractController() {
         }
         break;
 
-      defaut:
+      default:
         break;
     }
   } while(ctrlInput != ESC_KEY);

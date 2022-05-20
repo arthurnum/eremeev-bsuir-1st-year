@@ -89,7 +89,7 @@ int main() {
         set_main_screen();
         break;
 
-      defaut:
+      default:
         break;
     }
   } while(ctrlInput != ESC_KEY);

@@ -236,7 +236,7 @@ Person* person_search_window() {
         exit = true;
         break;
 
-      defaut:
+      default:
         break;
     }
   } while(!exit);
@@ -434,7 +434,7 @@ void personController() {
         }
         break;
 
-      defaut:
+      default:
         break;
     }
   } while(ctrlInput != ESC_KEY);

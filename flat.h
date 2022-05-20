@@ -255,7 +255,7 @@ Flat* flat_search_window() {
         exit = true;
         break;
 
-      defaut:
+      default:
         break;
     }
   } while(!exit);
@@ -487,7 +487,7 @@ void flatController() {
         }
         break;
 
-      defaut:
+      default:
         break;
     }
   } while(ctrlInput != ESC_KEY);
